@@ -1,0 +1,39 @@
+{
+  "name": "@reelscript/reel-ingest",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ReelScript AI: Instagram Reel discovery, audio extraction, transcription and performance analytics",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "migrate": "tsx src/scripts/migrate.ts",
+    "dev": "tsx watch src/main.ts",
+    "start": "node dist/main.js",
+    "doctor": "tsx src/scripts/doctor.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:integration": "TEST_DATABASE_URL=${TEST_DATABASE_URL:-postgres://reelscript@localhost:5433/reelscript_test} vitest run"
+  },
+  "dependencies": {
+    "dotenv": "^18.0.8",
+    "fastify": "^5.12.7",
+    "pg": "^8.23.1",
+    "pg-boss": "^12.38.0",
+    "pino": "^10.4.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/pg": "^8.23.1",
+    "pino-pretty": "^13.2.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5"
+  }
+}

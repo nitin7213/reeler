@@ -1,0 +1,1186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ReelScript</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='4' fill='%237c3aed'/%3E%3Cpath d='M6 4.5v7l5-3.5z' fill='white'/%3E%3C/svg%3E" />
+<style>
+  :root {
+    --bg: #f6f6f9; --panel: #ffffff; --panel-2: #fafafc; --text: #111118; --muted: #6b6b80; --faint: #9a9aae;
+    --border: #e7e7ee; --border-strong: #d7d7e2;
+    --accent: #7c3aed; --accent-2: #db2777; --accent-soft: #f3edff; --accent-text: #ffffff;
+    --ok: #15803d; --ok-soft: #e8f7ee; --warn: #b45309; --warn-soft: #fdf3e4; --bad: #c81e1e; --bad-soft: #fdecec;
+    --chip: #f1f1f6; --shadow: 0 1px 2px rgba(16,16,40,.04), 0 4px 16px rgba(16,16,40,.06);
+    --radius: 14px; --radius-sm: 9px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0c0c11; --panel: #15151c; --panel-2: #1a1a23; --text: #ededf3; --muted: #a0a0b4; --faint: #70708a;
+      --border: #26262f; --border-strong: #33333f;
+      --accent: #a78bfa; --accent-2: #f472b6; --accent-soft: #221b36; --accent-text: #0c0c11;
+      --ok: #4ade80; --ok-soft: #12261b; --warn: #fbbf24; --warn-soft: #2a2110; --bad: #f87171; --bad-soft: #2c1414;
+      --chip: #20202a; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35);
+    }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.55 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; background: var(--chip); padding: 1px 5px; border-radius: 5px; }
+
+  /* ---- app bar */
+  .appbar { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--panel) 82%, transparent); backdrop-filter: saturate(160%) blur(12px); border-bottom: 1px solid var(--border); }
+  .appbar-inner { max-width: 1280px; margin: 0 auto; padding: 10px 24px; display: flex; align-items: center; gap: 20px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; letter-spacing: -.01em; white-space: nowrap; }
+  .logo { width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: grid; place-items: center; box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 35%, transparent); }
+  .logo svg { width: 14px; height: 14px; fill: #fff; margin-left: 2px; }
+  .tabs { display: flex; gap: 4px; background: var(--chip); padding: 4px; border-radius: 11px; }
+  .tab { background: transparent; color: var(--muted); border: 0; padding: 7px 14px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 7px; }
+  .tab:hover { color: var(--text); }
+  .tab.active { background: var(--panel); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  .tab .count { background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 0 7px; font-size: 11px; }
+  .spacer { flex: 1; }
+  .appbar label.setting { display: flex; align-items: center; gap: 8px; margin: 0; font-weight: 500; color: var(--muted); font-size: 13px; white-space: nowrap; }
+
+  main { max-width: 1280px; margin: 0 auto; padding: 28px 24px 80px; }
+  .page[hidden] { display: none; }
+  .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
+  h1 { font-size: 24px; letter-spacing: -.02em; margin: 0; }
+  h2 { font-size: 15px; margin: 0 0 12px; letter-spacing: -.01em; }
+  h3 { font-size: 13px; margin: 0 0 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .sub { color: var(--muted); margin: 4px 0 0; }
+
+  /* ---- cards */
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 18px; box-shadow: var(--shadow); }
+  .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .panel-head h2 { margin: 0; }
+  .split { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; }
+  @media (max-width: 900px) { .split { grid-template-columns: 1fr; } }
+
+  /* ---- form controls */
+  label { display: block; font-weight: 600; margin: 12px 0 6px; font-size: 13px; }
+  input, textarea, select { width: 100%; padding: 9px 12px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--panel); color: var(--text); font: inherit; transition: border-color .15s, box-shadow .15s; }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+  textarea { min-height: 120px; font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; resize: vertical; }
+  input[type=checkbox] { width: 16px; height: 16px; padding: 0; accent-color: var(--accent); cursor: pointer; vertical-align: middle; }
+  select.fsel { width: auto; padding: 7px 30px 7px 10px; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5l3 3 3-3' fill='none' stroke='%23888' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 9px center; background-size: 12px; cursor: pointer; }
+  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .row > * { flex: 0 0 auto; }
+  .inline { display: inline-flex !important; align-items: center; gap: 8px; margin: 0 !important; font-weight: 500 !important; }
+  .opts { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; padding: 12px 14px; background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--radius-sm); margin-top: 14px; }
+
+  /* ---- buttons */
+  button { background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 70%, var(--accent-2))); color: #fff; border: 0; border-radius: var(--radius-sm); padding: 9px 16px; font: inherit; font-weight: 600; cursor: pointer; transition: transform .05s, filter .15s, background .15s; white-space: nowrap; }
+  button:hover { filter: brightness(1.07); }
+  button:active { transform: translateY(1px); }
+  button:disabled { opacity: .5; cursor: default; filter: none; }
+  button.secondary { background: var(--panel); color: var(--text); border: 1px solid var(--border-strong); }
+  button.secondary:hover { background: var(--chip); }
+  button.danger { background: transparent; color: var(--bad); border: 1px solid color-mix(in srgb, var(--bad) 45%, transparent); }
+  button.danger:hover { background: var(--bad-soft); }
+  button.danger.armed { background: var(--bad); color: #fff; border-color: var(--bad); }
+  button.small { padding: 5px 10px; font-size: 12px; border-radius: 7px; }
+  button.big { padding: 11px 22px; font-size: 15px; }
+
+  /* ---- text */
+  .hint { color: var(--muted); font-size: 12.5px; }
+  .err { color: var(--bad); white-space: pre-wrap; margin: 8px 0 0; }
+  .err:empty { display: none; }
+  .null { color: var(--faint); }
+  .callout { border-radius: var(--radius-sm); padding: 10px 12px; font-size: 13px; margin: 10px 0 0; }
+  .callout.warn { background: var(--warn-soft); color: var(--warn); }
+  .callout.ok { background: var(--ok-soft); color: var(--ok); font-weight: 600; }
+
+  /* ---- stats */
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 10px; }
+  .stat { background: var(--panel-2); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
+  .stat b { display: block; font-size: 20px; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .stat span { color: var(--muted); font-size: 12px; }
+
+  /* ---- progress */
+  .bar { height: 10px; background: var(--chip); border-radius: 999px; overflow: hidden; margin: 14px 0 10px; }
+  .bar > div { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .4s ease; }
+  .bar.running > div { background-image: linear-gradient(90deg, var(--accent), var(--accent-2)), repeating-linear-gradient(45deg, rgba(255,255,255,.18) 0 10px, transparent 10px 20px); background-blend-mode: overlay; background-size: 100% 100%, 28px 28px; animation: stripes 1s linear infinite; }
+  @keyframes stripes { to { background-position: 0 0, 28px 0; } }
+  .timing { font-weight: 600; font-size: 14px; margin: 0 0 12px; }
+
+  /* ---- badges */
+  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; background: var(--chip); color: var(--muted); white-space: nowrap; }
+  .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .8; }
+  .s-completed { background: var(--ok-soft); color: var(--ok); }
+  .s-partial { background: var(--warn-soft); color: var(--warn); }
+  .s-failed { background: var(--bad-soft); color: var(--bad); }
+  .s-cancelled { background: var(--chip); color: var(--muted); }
+  .s-processing, .s-queued, .s-discovering { background: var(--accent-soft); color: var(--accent); }
+
+  /* ---- tables */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; background: var(--panel); }
+  .tablewrap:empty { display: none; }
+  table { width: 100%; border-collapse: separate; border-spacing: 0; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: 0; }
+  thead th { position: sticky; top: 0; background: var(--panel-2); color: var(--muted); font-weight: 600; font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; z-index: 1; }
+  th[data-sort] { user-select: none; }
+  th[data-sort]:hover { color: var(--text); }
+  tbody tr { transition: background .12s; }
+  tbody tr:hover { background: var(--panel-2); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.num { font-weight: 500; }
+
+  /* ---- transcript */
+  details summary { cursor: pointer; color: var(--text); list-style: none; }
+  details summary::-webkit-details-marker { display: none; }
+  details > summary::before { content: '▸'; display: inline-block; margin-right: 6px; color: var(--accent); transition: transform .15s; }
+  details[open] > summary::before { transform: rotate(90deg); }
+  .transcript { white-space: pre-wrap; background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-top: 8px; max-height: 300px; overflow: auto; line-height: 1.6; }
+  .seg { color: var(--accent); font-family: ui-monospace, Menlo, monospace; font-size: 11px; margin-right: 8px; opacity: .85; }
+  ul.clean { margin: 6px 0; padding-left: 18px; }
+  ul.clean li { margin: 3px 0; }
+
+  /* ---- toolbars & filters */
+  .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 12px 14px; margin: 12px 0; border: 1px solid var(--border); border-radius: 12px; background: var(--panel); box-shadow: var(--shadow); }
+  .toolbar.filterbox { display: block; }
+  .toolbar[hidden] { display: none; }
+  .toolbar.selection { position: sticky; top: 62px; z-index: 5; border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); background: var(--accent-soft); }
+  .toolbar .sep { width: 1px; height: 22px; background: var(--border-strong); }
+  .filters { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px 14px; align-items: end; }
+  .filters .field label { margin: 0 0 5px; font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .filters .field select.fsel { width: 100%; }
+  .filters .wide { grid-column: span 2; }
+  .filters-foot { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+
+  /* ---- creators */
+  .creators { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  .creator { text-align: left; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 12px; padding: 14px; box-shadow: var(--shadow); cursor: pointer; display: flex; gap: 12px; align-items: center; font-weight: 400; white-space: normal; min-width: 0; }
+  .creator > span:last-child { min-width: 0; flex: 1; }
+  .creator:hover { border-color: var(--accent); filter: none; }
+  .creator.active { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+  .avatar { width: 42px; height: 42px; border-radius: 50%; flex: 0 0 42px; display: grid; place-items: center; color: #fff !important; font-weight: 800; font-size: 17px; background: linear-gradient(135deg, #7c3aed, #db2777); text-shadow: 0 1px 2px rgba(0,0,0,.25); }
+  .creator b { display: block; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .creator span span { color: var(--muted); font-size: 12px; display: block; }
+
+  /* ---- empty states */
+  .empty { text-align: center; padding: 36px 16px; color: var(--muted); }
+  .empty b { display: block; color: var(--text); font-size: 15px; margin-bottom: 4px; }
+
+  /* ---- collector help */
+  .steps { counter-reset: s; list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 8px; }
+  .steps li { counter-increment: s; display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: var(--muted); }
+  .steps li::before { content: counter(s); flex: 0 0 22px; height: 22px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 12px; display: grid; place-items: center; }
+  .bookmarklet { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff !important; font-weight: 700; text-decoration: none !important; cursor: grab; box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 30%, transparent); }
+
+  #toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 10px); background: var(--text); color: var(--bg); padding: 11px 18px; border-radius: 12px; font-weight: 600; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; z-index: 50; max-width: 90vw; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+  #toast.err { background: var(--bad); color: #fff; }
+
+  @media (max-width: 720px) {
+    .appbar-inner { flex-wrap: wrap; padding: 10px 16px; gap: 10px; }
+    .spacer { display: none; }
+    .appbar label.setting { width: 100%; }
+    .appbar label.setting select { flex: 1; min-width: 0; width: 100%; }
+    .opts .spacer { display: none; }
+    main { padding: 20px 16px 60px; }
+    .filters .wide { grid-column: auto; }
+  }
+</style>
+</head>
+<body>
+<header class="appbar">
+  <div class="appbar-inner">
+    <div class="brand"><span class="logo"><svg viewBox="0 0 10 12"><path d="M0 0v12l10-6z"/></svg></span>ReelScript</div>
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="import" role="tab">Import</button>
+      <button class="tab" data-tab="history" role="tab">History <span class="count" id="historyCount" hidden></span></button>
+      <button class="tab" data-tab="library" role="tab">Library <span class="count" id="libraryCount" hidden></span></button>
+    </nav>
+    <span class="spacer"></span>
+    <label class="setting">Transcription <select id="mode" class="fsel"></select></label>
+  </div>
+</header>
+
+<main>
+  <!-- =============================== IMPORT -->
+  <section class="page" data-page="import">
+    <div class="page-head">
+      <div><h1>Import Reels</h1><p class="sub">Collect a creator's Reels with their metrics, then transcribe the ones worth studying (original language + English).</p></div>
+    </div>
+
+    <div class="split">
+      <section class="panel" id="collectorBox">
+        <div class="panel-head"><h2>1 · Collect a creator's Reels</h2><span class="badge s-completed">recommended</span></div>
+        <p class="hint" style="margin-top:0">Works for any public creator, free. It runs in your own browser and only reads what's on the page you're viewing (never your login or cookies), including each Reel's views, likes and comments.</p>
+        <ol class="steps">
+          <li><span>Drag <a id="bookmarklet" class="bookmarklet" href="#">📥 Collect Reels</a> to your bookmarks bar <i>(once; re-drag after updates)</i>.</span></li>
+          <li><span>Open the creator's <b>Reels</b> tab on instagram.com.</span></li>
+          <li><span>Click the bookmark, then <b>Auto-scroll</b> until it says it reached the end.</span></li>
+          <li><span>Press <b>Import</b>. ReelScript opens with every Reel filled in on the right — press <b>Start import</b>.</span></li>
+        </ol>
+      </section>
+
+      <section class="panel">
+        <h2>2 · Review &amp; start</h2>
+        <p id="collected" class="callout ok" hidden></p>
+        <label for="reels" style="margin-top:0">Reels to import <span class="hint" style="font-weight:400">— filled in by the bookmark, or paste Reel URLs (one per line)</span></label>
+        <textarea id="reels" placeholder="https://www.instagram.com/reel/CrilSThplji/&#10;https://www.instagram.com/reel/…"></textarea>
+
+        <div class="opts">
+          <label class="inline"><input type="checkbox" id="transcribe" checked /> Transcribe</label>
+          <label class="inline" title="Reels below this (or with unknown views) are saved with their metrics but not transcribed.">
+            <select id="minViewsPreset" class="fsel">
+              <option value="0">all reels</option>
+              <option value="50000">only ≥ 50K views</option>
+              <option value="100000">only ≥ 100K views</option>
+              <option value="250000">only ≥ 250K views</option>
+              <option value="500000" selected>only ≥ 500K views</option>
+              <option value="1000000">only ≥ 1M views</option>
+              <option value="5000000">only ≥ 5M views</option>
+              <option value="custom">custom…</option>
+            </select>
+            <input type="number" id="minViews" min="0" placeholder="views" style="width:120px" hidden />
+            <span id="minViewsText" class="hint"></span>
+          </label>
+          <label class="inline">Max reels <input type="number" id="maxReels" value="1000" min="1" max="5000" style="width:90px" /></label>
+          <span class="spacer"></span>
+          <button id="start" class="big">Start import</button>
+        </div>
+        <p id="startErr" class="err"></p>
+      </section>
+    </div>
+
+    <section class="panel" id="statusPanel" hidden>
+      <div class="panel-head">
+        <h2>Current import <span id="impId" class="hint" style="font-weight:500"></span></h2>
+        <div class="row"><span id="impStatus" class="badge"></span>
+          <button class="danger small" id="stopImport" hidden title="Stop downloading and transcribing. Finished reels and transcripts are kept.">Stop</button>
+          <button class="secondary small" id="retry" hidden>Retry failed</button></div>
+      </div>
+      <div class="bar" id="barWrap"><div id="bar" style="width:0"></div></div>
+      <p id="timing" class="timing"></p>
+      <div class="row opts" id="thresholdRow" style="margin:0 0 14px" hidden>
+        <span id="thresholdNow" class="hint" style="font-weight:600"></span>
+        <span class="spacer"></span>
+        <label class="inline">Change to
+          <select id="thPreset" class="fsel">
+            <option value="0">all reels</option><option value="50000">≥ 50K</option><option value="100000">≥ 100K</option>
+            <option value="250000">≥ 250K</option><option value="500000">≥ 500K</option><option value="1000000">≥ 1M</option>
+            <option value="5000000">≥ 5M</option><option value="custom">custom…</option>
+          </select>
+          <input type="number" id="thCustom" min="0" style="width:120px" hidden /><span id="thText" class="hint"></span>
+        </label>
+        <button class="secondary small" id="thApply">Apply to remaining reels</button>
+      </div>
+      <div class="grid" id="stages"></div>
+      <div id="results" class="row" style="margin-top:14px"></div>
+      <p id="coverage" class="hint"></p>
+      <div id="reelProgress"></div>
+      <p id="impErr" class="err"></p>
+      <div id="failures" style="margin-top:8px"></div>
+      <p id="costs" class="hint"></p>
+    </section>
+  </section>
+
+  <!-- =============================== HISTORY -->
+  <section class="page" data-page="history" hidden>
+    <div class="page-head">
+      <div><h1>Import history</h1><p class="sub">Every import with its outcome. Stop running ones, open their progress, or clean up.</p></div>
+      <button class="secondary" id="refreshImports">Refresh</button>
+    </div>
+    <div id="imports"></div>
+  </section>
+
+  <!-- =============================== LIBRARY -->
+  <section class="page" data-page="library" hidden>
+    <div class="page-head">
+      <div><h1>Library</h1><p class="sub">Pick a creator to rank their Reels by views, likes and comments, read scripts, and export for ChatGPT.</p></div>
+      <div class="row">
+        <input id="username" placeholder="@username" style="width:220px" />
+        <button id="load">Open</button>
+      </div>
+    </div>
+    <div id="creators" class="creators" style="margin-bottom:22px"></div>
+    <p id="browseErr" class="err"></p>
+    <div id="analytics"></div>
+    <div id="filters" class="toolbar filterbox" hidden>
+      <div class="filters">
+        <div class="field wide"><label for="fSearch">Search</label><input id="fSearch" placeholder="Words in caption or transcript…" /></div>
+        <div class="field"><label for="fViewsPreset">Views</label>
+          <select id="fViewsPreset" class="fsel">
+            <option value="">any</option><option value="100000">≥ 100K</option><option value="250000">≥ 250K</option>
+            <option value="500000">≥ 500K</option><option value="1000000">≥ 1M</option><option value="5000000">≥ 5M</option><option value="custom">custom…</option>
+          </select>
+          <input id="fViews" type="number" min="0" placeholder="min views" style="margin-top:6px" hidden />
+        </div>
+        <div class="field"><label for="fLikes">Min likes</label><input id="fLikes" type="number" min="0" placeholder="0" /></div>
+        <div class="field"><label for="fComments">Min comments</label><input id="fComments" type="number" min="0" placeholder="0" /></div>
+        <div class="field"><label for="fLang">Language</label><select id="fLang" class="fsel"><option value="">Any language</option><option value="hindi">Hindi</option><option value="hinglish">Hinglish</option><option value="english">English</option><option value="other">Other</option></select></div>
+        <div class="field"><label for="fTranscript">Transcript</label><select id="fTranscript" class="fsel"><option value="">All states</option><option value="speech">Transcribed (has speech)</option><option value="no_speech">Music only (no speech)</option><option value="none">Not transcribed yet</option></select></div>
+        <div class="field"><label for="fFrom">Published from</label><input id="fFrom" type="date" /></div>
+        <div class="field"><label for="fTo">Published to</label><input id="fTo" type="date" /></div>
+        <div class="field"><label for="fSort">Sort by</label>
+          <select id="fSort" class="fsel">
+            <option value="views">Views</option><option value="likes">Likes</option><option value="comments">Comments</option>
+            <option value="engagement">Likes + comments</option><option value="rate">Engagement rate</option><option value="xmedian">× median</option>
+            <option value="published">Published date</option><option value="length">Length</option><option value="words">Words spoken</option>
+          </select>
+        </div>
+      </div>
+      <div class="filters-foot">
+        <label class="inline" title="Hide reels whose transcript has not been generated (and music-only reels)"><input id="fHasTranscript" type="checkbox" /> Only reels with transcripts</label>
+        <label class="inline"><input id="fOutliers" type="checkbox" /> Outliers only</label>
+        <span class="spacer"></span>
+        <button class="secondary small" id="fDir" title="Toggle direction">Highest first ▼</button>
+        <button class="secondary small" id="fReset">Reset filters</button>
+      </div>
+    </div>
+    <div id="reelsOut"></div>
+  </section>
+</main>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const num = (v) => (v === null || v === undefined ? '<span class="null">n/a</span>' : Number(v).toLocaleString());
+const compact = new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 });
+// Rounded grid counts are shown the way Instagram rounds them, with ≈.
+const metric = (v, approx) => (v === null || v === undefined ? '<span class="null">n/a</span>'
+  : approx ? `<span title="Rounded count from the profile grid">≈${compact.format(v)}</span>` : Number(v).toLocaleString());
+const fmtDate = (d) => (d ? new Date(d).toLocaleDateString() : '<span class="null">n/a</span>');
+const dur = (sec) => {
+  if (sec === null || sec === undefined) return 'n/a';
+  if (sec < 60) return `${Math.round(sec)}s`;
+  const m = Math.floor(sec / 60), r = Math.round(sec % 60);
+  return m < 60 ? `${m}m ${r}s` : `${Math.floor(m / 60)}h ${m % 60}m`;
+};
+const STAGE_LABEL = { queued: 'waiting to download', fetching: 'downloading', extracting_audio: 'extracting audio', waiting_transcription: 'waiting to transcribe', transcribing: 'transcribing now', done: 'done', skipped: 'skipped', failed: 'failed' };
+const ts = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+
+async function api(path, opts = {}) {
+  // Only label requests as JSON when they carry a body; an empty JSON body is rejected by the server.
+  const res = await fetch(path, { ...opts, headers: opts.body ? { 'content-type': 'application/json' } : {} });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(body.message || (body.issues || []).join('\n') || body.error || `HTTP ${res.status}`);
+  return body;
+}
+
+/** Threshold from a preset <select> plus an optional custom number input. */
+function readMinViews(selectId, inputId) {
+  const v = $(selectId).value;
+  return v === 'custom' ? Math.max(0, Math.round(Number($(inputId).value) || 0)) : Number(v);
+}
+function wireMinViews(selectId, inputId, textId) {
+  const update = () => {
+    $(inputId).hidden = $(selectId).value !== 'custom';
+    const n = readMinViews(selectId, inputId);
+    $(textId).textContent = $(selectId).value === 'custom' ? (n ? `= ${n.toLocaleString()} views` : '') : '';
+  };
+  $(selectId).onchange = update;
+  $(inputId).oninput = update;
+  update();
+}
+
+let toastTimer = null;
+function toast(msg, isErr = false) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'show' + (isErr ? ' err' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => (t.className = ''), isErr ? 6000 : 3000);
+}
+
+/**
+ * Two-click delete: the first click arms the button and spells out exactly what will be deleted;
+ * a second click within 5s runs the action. `describe` returns that text at click time.
+ */
+function armDelete(btn, action, describe) {
+  const label = btn.textContent;
+  btn.onclick = async () => {
+    if (!btn.classList.contains('armed')) {
+      btn.classList.add('armed');
+      btn.textContent = `Click again: ${describe ? describe() : 'confirm delete'}`;
+      btn._t = setTimeout(() => { btn.classList.remove('armed'); btn.textContent = label; }, 5000);
+      return;
+    }
+    clearTimeout(btn._t);
+    btn.disabled = true;
+    btn.textContent = 'Deleting…';
+    try { await action(); }
+    catch (e) { toast(e.message, true); btn.disabled = false; btn.classList.remove('armed'); btn.textContent = label; }
+  };
+}
+
+/** Wire a "select all" header checkbox and row checkboxes; calls onChange(selectedValues). */
+function wireSelection(container, onChange) {
+  const all = container.querySelector('[data-selall]');
+  const rows = [...container.querySelectorAll('[data-sel]')];
+  const update = () => {
+    const sel = rows.filter((c) => c.checked).map((c) => c.dataset.sel);
+    if (all) { all.checked = sel.length > 0 && sel.length === rows.length; all.indeterminate = sel.length > 0 && sel.length < rows.length; }
+    onChange(sel);
+  };
+  rows.forEach((c) => (c.onchange = update));
+  if (all) all.onchange = () => { rows.forEach((c) => { if (!c.disabled) c.checked = all.checked; }); update(); };
+  update();
+}
+
+// ---- Tabs
+function showTab(name) {
+  document.querySelectorAll('.page').forEach((p) => (p.hidden = p.dataset.page !== name));
+  document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
+  if (name === 'library') loadCreators();
+  if (name === 'history') loadImports();
+  window.scrollTo({ top: 0 });
+}
+document.querySelectorAll('.tab').forEach((t) => (t.onclick = () => showTab(t.dataset.tab)));
+
+// ---- Library: creator cards
+async function loadCreators() {
+  let list = [];
+  try { list = (await api('/v1/profiles')).profiles; } catch { return; }
+  $('libraryCount').hidden = !list.length;
+  $('libraryCount').textContent = list.length;
+  const current = $('username').value.trim().replace(/^@/, '').toLowerCase();
+  $('creators').innerHTML = list.length ? list.map((c) => `
+    <button class="creator ${c.username === current ? 'active' : ''}" data-creator="${esc(c.username)}">
+      <span class="avatar">${esc(c.username.replace(/[^a-z0-9]/gi, '').slice(0, 1).toUpperCase() || '@')}</span>
+      <span><b>@${esc(c.username)}</b>
+        <span>${c.reels} reels · ${c.transcribed} transcribed${c.top_views ? ` · top ${compact.format(c.top_views)} views` : ''}</span></span>
+    </button>`).join('')
+    : '<div class="panel empty" style="grid-column:1/-1"><b>No creators yet</b>Collect a creator\'s Reels with the bookmark on the Import tab.</div>';
+  $('creators').querySelectorAll('[data-creator]').forEach((b) => (b.onclick = () => openCreator(b.dataset.creator)));
+}
+function openCreator(username) {
+  $('username').value = username;
+  showTab('library');
+  loadCreator();
+}
+
+let pollTimer = null;
+let currentImport = null;
+// Rounded counts read from the profile grid by the Collect Reels bookmark: { shortcode: [views, likes, comments] }.
+let collectedMetrics = {};
+let collectedUser = null;
+
+$('start').onclick = async () => {
+  $('startErr').textContent = '';
+  const reelUrls = $('reels').value.split(/\s+/).map((s) => s.trim()).filter(Boolean);
+  if (!reelUrls.length) {
+    $('startErr').textContent = 'No Reels yet: use the Collect Reels bookmark on a creator\'s Reels tab (step 1), or paste Reel URLs.';
+    return;
+  }
+  const body = { transcribe: $('transcribe').checked, maxReels: Number($('maxReels').value) || 1000 };
+  const minViews = readMinViews('minViewsPreset', 'minViews');
+  if (body.transcribe && minViews > 0) body.transcribeMinViews = minViews;
+  {
+    body.reelUrls = reelUrls;
+    const observed = {};
+    for (const u of reelUrls) {
+      const code = (u.match(/\/(?:reel|reels|p|tv)\/([A-Za-z0-9_-]{5,})/) || [])[1];
+      const m = code && collectedMetrics[code];
+      if (m) observed[code] = { views: m[0], likes: m[1], comments: m[2] };
+    }
+    if (Object.keys(observed).length) body.observedMetrics = observed;
+    // Link the reels to the creator straight away, so they appear in the Library before each is downloaded.
+    if (collectedUser) body.profileUrl = '@' + collectedUser;
+  }
+
+  $('start').disabled = true;
+  try {
+    const res = await api('/v1/imports', { method: 'POST', body: JSON.stringify(body) });
+    watch(res.importId);
+  } catch (e) {
+    $('startErr').textContent = e.message;
+  } finally {
+    $('start').disabled = false;
+  }
+};
+
+$('thApply').onclick = async () => {
+  if (!currentImport) return;
+  const n = readMinViews('thPreset', 'thCustom');
+  try {
+    await api(`/v1/imports/${currentImport}`, { method: 'PATCH', body: JSON.stringify({ transcribeMinViews: n || null }) });
+    toast(n ? `Remaining reels: transcribing only ≥ ${n.toLocaleString()} views` : 'Remaining reels: transcribing all');
+    clearTimeout(pollTimer);
+    poll();
+  } catch (e) { toast(e.message, true); }
+};
+
+armDelete($('stopImport'), async () => {
+  const r = await api(`/v1/imports/${currentImport}/cancel`, { method: 'POST' });
+  toast(`Stopped. ${r.stopped} unfinished reel(s) were not processed; finished ones are kept.`);
+  $('stopImport').disabled = false;
+  $('stopImport').classList.remove('armed');
+  $('stopImport').textContent = 'Stop';
+  clearTimeout(pollTimer);
+  poll();
+  loadImports();
+}, () => 'stop this import');
+
+$('retry').onclick = async () => {
+  if (!currentImport) return;
+  await api(`/v1/imports/${currentImport}/retry`, { method: 'POST' }).catch((e) => ($('impErr').textContent = e.message));
+  watch(currentImport);
+};
+
+function watch(id) {
+  currentImport = id;
+  history.replaceState(null, '', `#import=${id}`);
+  clearTimeout(pollTimer);
+  $('statusPanel').hidden = false;
+  poll();
+}
+
+async function poll() {
+  let s;
+  try {
+    s = await api(`/v1/imports/${currentImport}`);
+  } catch (e) {
+    $('impErr').textContent = e.message;
+    return;
+  }
+  $('impId').textContent = s.importId.slice(0, 8);
+  $('impStatus').textContent = s.status;
+  $('impStatus').className = `badge s-${s.status}`;
+  $('bar').style.width = `${s.progress.percent}%`;
+  $('barWrap').classList.toggle('running', ['queued', 'discovering', 'processing'].includes(s.status));
+  const order = ['total', 'queued', 'fetching', 'extracting_audio', 'waiting_transcription', 'transcribing', 'done', 'skipped', 'failed'];
+  $('stages').innerHTML = order.filter((k) => s.progress[k] !== undefined)
+    .map((k) => `<div class="stat"><b>${s.progress[k]}</b><span>${k === 'total' ? 'total reels' : STAGE_LABEL[k]}</span></div>`).join('');
+  // Re-rendering replaces the <details> elements; remember which ones the user opened.
+  const openState = {};
+  $('statusPanel').querySelectorAll('details[data-key]').forEach((d) => (openState[d.dataset.key] = d.open));
+
+  $('thresholdRow').hidden = !s.transcribe;
+  $('thresholdNow').textContent = s.transcribeMinViews ? `Transcribing only reels with ≥ ${s.transcribeMinViews.toLocaleString()} views.` : 'Transcribing all reels.';
+  const t = s.timing;
+  $('timing').textContent = t.basis === 'done'
+    ? `Finished in ${dur(t.elapsedSeconds)}`
+    : t.basis === 'discovering'
+      ? `Finding reels… (${dur(t.elapsedSeconds)} elapsed)`
+      : `About ${dur(t.secondsRemaining)} remaining · ${dur(t.elapsedSeconds)} elapsed · ~${t.avgDownloadSeconds}s download per reel, transcription takes ~${t.transcribeSecondsPerAudioSecond}× the reel's length${t.basis === 'default' ? ' (rough estimate until a few reels finish)' : ''}`;
+  $('reelProgress').innerHTML = s.reels.length ? `<details data-key="progress" ${(openState.progress ?? s.reels.length <= 10) ? 'open' : ''}><summary><b>Per-reel progress</b> <span class="hint">(${s.reels.length})</span></summary><div class="tablewrap" style="margin-top:10px;max-height:420px;overflow:auto"><table>
+      <thead><tr><th>Reel</th><th>Creator</th><th>Stage</th><th class="num">Views</th><th class="num">Length</th><th class="num">Download</th><th class="num">Transcribe</th></tr></thead>
+      <tbody>${s.reels.map((r) => `<tr>
+        <td>${esc(r.shortcode)}</td><td>${r.owner ? '@' + esc(r.owner) : '<span class="null">unknown</span>'}</td>
+        <td><span class="badge ${r.stopped ? 's-cancelled' : r.stage === 'done' ? 's-completed' : r.stage === 'failed' || r.stage === 'skipped' ? 's-failed' : ''}">${r.stopped ? 'stopped' : STAGE_LABEL[r.stage] || r.stage}</span>${r.attempts > 1 ? ` <span class="hint">attempt ${r.attempts}</span>` : ''}</td>
+        <td class="num">${r.views != null ? compact.format(r.views) : '–'}</td>
+        <td class="num">${r.durationSeconds ? Math.round(r.durationSeconds) + 's' : '–'}</td>
+        <td class="num">${r.downloadSeconds != null ? r.downloadSeconds + 's' : '–'}</td>
+        <td class="num">${r.transcriptFromCache ? 'cached' : r.transcribeSeconds != null ? r.transcribeSeconds + 's' : r.note ? `<span class="hint" title="${esc(r.note)}">not transcribed (below threshold)</span>` : '–'}</td></tr>`).join('')}</tbody></table></div></details>` : '';
+  const owners = [...new Set(s.reels.filter((r) => r.stage === 'done' && r.owner).map((r) => r.owner))];
+  $('results').innerHTML = owners.map((o) => `<button class="secondary" data-user="${esc(o)}">View results for @${esc(o)}</button>`).join('');
+  $('results').querySelectorAll('button').forEach((b) => (b.onclick = () => { $('username').value = b.dataset.user; openCreator(b.dataset.user); }));
+  const complete = s.collection.complete === true ? 'all reels collected' : s.collection.complete === false ? 'NOT all reels collected' : 'completeness unknown';
+  $('coverage').textContent = `${s.collection.reelsDiscovered} reel(s) found · coverage: ${s.collection.coverage} (${complete}). ${s.collection.notes.join(' ')}`;
+  $('impErr').textContent = s.error || '';
+  $('failures').innerHTML = s.failures.length
+    ? `<details data-key="failures" ${openState.failures ? 'open' : ''}><summary>${s.failures.length} reel(s) skipped or failed</summary><ul class="clean">${s.failures
+        .map((f) => `<li><b>${esc(f.shortcode)}</b> — ${esc(f.outcome)} (${esc(f.kind)}): <span class="hint">${esc((f.error || '').slice(0, 160))}</span></li>`).join('')}</ul></details>`
+    : '';
+  $('costs').textContent = `Cost: $${s.costs.totalUsd.toFixed(4)}` + s.costs.items.map((c) => ` · ${c.provider} ${c.units} ${c.unit}${c.cachedUnits ? ` (${c.cachedUnits} cached)` : ''}`).join('');
+  const done = ['completed', 'partial', 'failed', 'cancelled'].includes(s.status);
+  $('stopImport').hidden = done;
+  $('retry').hidden = !(s.status === 'partial' || s.status === 'failed' || s.status === 'cancelled');
+  $('retry').textContent = s.status === 'cancelled' ? 'Resume' : 'Retry failed';
+  if (s.status === 'cancelled') $('timing').textContent = `Stopped after ${dur(t.elapsedSeconds)}. Finished reels and transcripts are kept — press Resume to continue the rest.`;
+  if (!done) pollTimer = setTimeout(poll, 2000);
+  else loadImports();
+}
+
+async function loadImports() {
+  let list;
+  try {
+    list = (await api('/v1/imports')).imports;
+  } catch (e) {
+    $('imports').innerHTML = `<p class="err">${esc(e.message)}</p>`;
+    return;
+  }
+  const active = list.filter((i) => ['queued', 'discovering', 'processing'].includes(i.status)).length;
+  $('historyCount').hidden = !active;
+  $('historyCount').textContent = `${active} running`;
+  if (!list.length) {
+    $('imports').innerHTML = '<div class="panel empty"><b>No imports yet</b>Start one from the Import tab.</div>';
+    return;
+  }
+  const isRunning = (st) => ['queued', 'discovering', 'processing'].includes(st);
+  $('imports').innerHTML = `
+    <div class="toolbar selection" id="impBar" hidden>
+      <b id="impSelCount"></b>
+      <button class="secondary small" id="impRemoveSel">Remove from list (keep reels)</button>
+      <button class="danger small" id="impDeleteSel">Delete reels too</button>
+    </div>
+    <div class="tablewrap"><table><thead><tr><th><input type="checkbox" data-selall title="Select all finished imports" /></th><th>Started</th><th>Status</th><th class="num">Done</th><th class="num">Skipped</th><th class="num">Failed</th><th>Creators</th><th></th></tr></thead><tbody>${list.map((i) => {
+    const running = isRunning(i.status);
+    return `<tr>
+      <td><input type="checkbox" data-sel="${i.id}" ${running ? 'disabled title="Still running"' : ''} /></td>
+      <td style="white-space:nowrap">${new Date(i.created_at).toLocaleString()}</td>
+      <td><span class="badge s-${i.status}">${esc(i.status)}</span></td>
+      <td class="num">${i.done}</td><td class="num">${i.skipped}</td><td class="num">${i.failed}</td>
+      <td>${i.owners.map((o) => `<a href="#" data-user="${esc(o)}">@${esc(o)}</a>`).join(', ') || (i.error ? `<span class="hint">${esc(i.error.slice(0, 60))}…</span>` : '<span class="null">–</span>')}</td>
+      <td style="white-space:nowrap"><button class="secondary small" data-watch="${i.id}">Progress</button>
+        ${running ? `<button class="danger small" data-stop="${i.id}">Stop</button>` : `<button class="secondary small" data-rm="${i.id}" title="Only removes this row. Reels, metrics and transcripts are kept.">Remove from list</button>
+        <button class="danger small" data-delall="${i.id}" data-n="${i.done + i.skipped + i.failed}" title="Deletes this import AND its reels, metrics, transcripts and audio">Delete reels too</button>`}</td></tr>`;
+  }).join('')}</tbody></table></div>`;
+
+  const box = $('imports');
+  box.querySelectorAll('[data-user]').forEach((a) => (a.onclick = (e) => { e.preventDefault(); openCreator(a.dataset.user); }));
+  box.querySelectorAll('[data-watch]').forEach((b) => (b.onclick = () => { watch(b.dataset.watch); showTab('import'); }));
+
+  const deleteImports = async (ids, withReels) => {
+    let reels = 0;
+    for (const id of ids) {
+      const r = await api(`/v1/imports/${id}?withReels=${withReels}`, { method: 'DELETE' });
+      reels += r.reelsDeleted || 0;
+      if (currentImport === id) { $('statusPanel').hidden = true; clearTimeout(pollTimer); currentImport = null; }
+    }
+    toast(`Deleted ${ids.length} import(s)` + (withReels ? ` and ${reels} reel(s)` : ''));
+    await loadImports();
+    if (withReels && $('username').value) loadCreator();
+  };
+  box.querySelectorAll('[data-stop]').forEach((b) => armDelete(b, async () => {
+    const r = await api(`/v1/imports/${b.dataset.stop}/cancel`, { method: 'POST' });
+    toast(`Stopped. ${r.stopped} unfinished reel(s) were not processed; finished ones are kept.`);
+    if (currentImport === b.dataset.stop) { clearTimeout(pollTimer); poll(); }
+    loadImports();
+  }, () => 'stop this import'));
+  const reelCount = (ids) => ids.reduce((n, id) => n + Number(box.querySelector(`[data-delall="${id}"]`)?.dataset.n || 0), 0);
+  // Removing from the list is harmless, so it runs on one click.
+  box.querySelectorAll('[data-rm]').forEach((b) => (b.onclick = () => deleteImports([b.dataset.rm], false).catch((e) => toast(e.message, true))));
+  box.querySelectorAll('[data-delall]').forEach((b) => armDelete(b, () => deleteImports([b.dataset.delall], true), () => `delete ${b.dataset.n} reel(s) + transcripts + audio`));
+
+  let selected = [];
+  wireSelection(box, (sel) => {
+    selected = sel;
+    $('impBar').hidden = !sel.length;
+    $('impSelCount').textContent = `${sel.length} selected`;
+  });
+  $('impRemoveSel').onclick = () => deleteImports(selected, false).catch((e) => toast(e.message, true));
+  armDelete($('impDeleteSel'), () => deleteImports(selected, true), () => `delete up to ${reelCount(selected)} reel(s) + transcripts + audio from ${selected.length} import(s)`);
+}
+$('refreshImports').onclick = async () => {
+  const b = $('refreshImports');
+  b.disabled = true;
+  b.textContent = 'Refreshing…';
+  await loadImports();
+  if ($('username').value.trim() && lastData) await loadCreator();
+  b.disabled = false;
+  b.textContent = 'Refresh';
+  toast(`Updated at ${new Date().toLocaleTimeString()}`);
+};
+
+$('load').onclick = loadCreator;
+$('username').addEventListener('keydown', (e) => e.key === 'Enter' && loadCreator());
+
+async function loadCreator() {
+  const u = $('username').value.trim().replace(/^@/, '');
+  if (!u) return;
+  $('browseErr').textContent = '';
+  history.replaceState(null, '', `#user=${encodeURIComponent(u)}`);
+  document.querySelectorAll('[data-creator]').forEach((b) => b.classList.toggle('active', b.dataset.creator === u.toLowerCase()));
+  try {
+    const [reels, report] = await Promise.all([api(`/v1/profiles/${encodeURIComponent(u)}/reels`), api(`/v1/profiles/${encodeURIComponent(u)}/analytics`)]);
+    renderAnalytics(report);
+    renderReels(reels, report);
+  } catch (e) {
+    $('browseErr').textContent = e.message;
+  }
+}
+
+function renderAnalytics(r) {
+  const m = r.measured;
+  const dq = m.dataQuality;
+  $('analytics').innerHTML = `
+    <section class="panel">
+    <div class="panel-head"><h2>@${esc(r.username)} · measured performance</h2><span class="hint">${esc(m.primaryMetricReason)}</span></div>
+    <div class="grid">
+      <div class="stat"><b>${dq.reels}</b><span>reels</span></div>
+      <div class="stat"><b>${esc(m.primaryMetric || 'n/a')}</b><span>primary metric</span></div>
+      <div class="stat"><b>${num(m.medians.views)}</b><span>median views</span></div>
+      <div class="stat"><b>${num(m.medians.likes)}</b><span>median likes</span></div>
+      <div class="stat"><b>${num(m.medians.comments)}</b><span>median comments</span></div>
+      <div class="stat"><b>${m.outliers.length}</b><span>outliers (≥${m.outlierThreshold}× median)</span></div>
+      <div class="stat"><b>${dq.transcribed}/${dq.reels}</b><span>transcribed (${dq.noSpeech} no speech)</span></div>
+      <div class="stat"><b>${dq.missingViews}</b><span>missing views</span></div>
+    </div>
+    ${m.caveats.length ? `<ul class="clean hint" style="margin-top:12px">${m.caveats.map((c) => `<li>${esc(c)}</li>`).join('')}</ul>` : ''}
+    <details style="margin-top:14px"><summary><b>Hypotheses</b> <span class="hint">— patterns in the outliers (correlational, not causal)</span></summary>
+    ${r.hypotheses.length
+      ? `<ul class="clean">${r.hypotheses.map((h) => `<li>${esc(h.statement)} <span class="hint">${esc(h.evidence)} · confidence: ${h.confidence}</span></li>`).join('')}</ul>`
+      : '<p class="hint">Not enough outliers and comparison reels to suggest patterns yet.</p>'}
+    <p class="hint">${esc(r.disclaimer)}</p></details>
+    </section>`;
+}
+
+let lastData = null, lastReport = null;
+let sortKey = 'views', sortDir = -1;
+const COLUMNS = [
+  ['published', 'Published'], ['length', 'Length'], ['views', 'Views'], ['likes', 'Likes'], ['comments', 'Comments'],
+  ['engagement', 'Likes + comments'], ['rate', 'Eng. rate'], ['xmedian', '× median'],
+];
+
+function renderReels(data, report) {
+  lastData = data; lastReport = report;
+  if (!data.count) {
+    $('reelsOut').innerHTML = '<div class="panel empty"><b>No reels for this creator yet</b>Collect their Reels with the bookmark on the Import tab.</div>';
+    return;
+  }
+  const perf = Object.fromEntries(report.measured.reels.map((p) => [p.shortcode, p]));
+  const features = Object.fromEntries(report.content.map((c) => [c.shortcode, c.features]));
+  const rows = data.reels.map((r) => {
+    const p = perf[r.shortcode] || {};
+    return { r, p, f: features[r.shortcode], v: {
+      published: r.publishedAt ? Date.parse(r.publishedAt) : null,
+      length: r.durationSeconds, views: r.metrics.views, likes: r.metrics.likes, comments: r.metrics.comments,
+      engagement: p.engagement ?? (r.metrics.likes != null && r.metrics.comments != null ? r.metrics.likes + r.metrics.comments : null),
+      rate: p.engagementRate ?? null, xmedian: p.ratioToMedian ?? null,
+      words: features[r.shortcode] ? features[r.shortcode].structure.words : null,
+    } };
+  });
+  // ---- filters
+  const q = $('fSearch').value.trim().toLowerCase();
+  const lang = $('fLang').value, tr = $('fTranscript').value;
+  const minV = Number($('fViews').value) || 0, minL = Number($('fLikes').value) || 0, minC = Number($('fComments').value) || 0;
+  const from = $('fFrom').value ? Date.parse($('fFrom').value) : null, to = $('fTo').value ? Date.parse($('fTo').value) + 86_400_000 : null;
+  const outliersOnly = $('fOutliers').checked;
+  const visible = rows.filter(({ r, p, f, v }) => {
+    const t = r.transcript;
+    if (q) {
+      const hay = [r.caption, t && t.original && t.original.text, t && t.english && t.english.text].filter(Boolean).join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    if (lang && !(f && f.language === lang)) return false;
+    if ($('fHasTranscript').checked && !(t && t.status === 'completed')) return false;
+    if (tr === 'speech' && !(t && t.status === 'completed')) return false;
+    if (tr === 'no_speech' && !(t && t.status === 'no_speech')) return false;
+    if (tr === 'none' && t) return false;
+    if (minV && !(v.views >= minV)) return false;
+    if (minL && !(v.likes >= minL)) return false;
+    if (minC && !(v.comments >= minC)) return false;
+    if (from && !(v.published >= from)) return false;
+    if (to && !(v.published < to)) return false;
+    if (outliersOnly && !p.isOutlier) return false;
+    return true;
+  });
+  $('filters').hidden = false;
+  $('fSort').value = sortKey;
+  $('fDir').textContent = sortDir < 0 ? (sortKey === 'published' ? 'Newest first ▼' : 'Highest first ▼') : (sortKey === 'published' ? 'Oldest first ▲' : 'Lowest first ▲');
+  rows.length = 0;
+  rows.push(...visible);
+
+  // Missing values always sort last, whichever direction.
+  rows.sort((x, y) => {
+    const a = x.v[sortKey], b = y.v[sortKey];
+    if (a == null && b == null) return 0;
+    if (a == null) return 1;
+    if (b == null) return -1;
+    return (a - b) * sortDir;
+  });
+  const arrow = (k) => (k === sortKey ? (sortDir < 0 ? ' ▼' : ' ▲') : '');
+  const segs = (list) => (list || []).map((x) => `<span class="seg">${ts(x.start)}</span>${esc(x.text)}`).join('\n');
+  const missingViews = data.reels.every((r) => r.metrics.views == null);
+
+  $('reelsOut').innerHTML = `
+    <div class="row" style="justify-content:space-between;margin-top:16px">
+      <h2 style="margin:0">Reels (${rows.length === data.count ? data.count : `showing ${rows.length} of ${data.count}`})</h2>
+      <span class="hint">Tip: set “Views ≥ 500K”, tick the box in the header to select all shown, then “Transcribe selected” · Click a column or use “Sort by”${missingViews ? ' · no view counts yet: import with the Collect Reels bookmark to get them' : ''}</span>
+    </div>
+    <div class="toolbar selection" id="reelBar" hidden>
+      <b id="reelSelCount"></b>
+      <button class="small" id="transcribeSel" title="Download audio and transcribe the selected reels (already-transcribed ones are reused from cache)">Transcribe selected</button>
+      <button class="danger small" id="delTranscriptsSel" title="Keep reels and metrics; transcripts can be regenerated by importing again">Delete transcripts</button>
+      <button class="danger small" id="delReelsSel" title="Delete reels with their metrics, transcripts and audio files">Delete reels</button>
+      <span class="sep"></span>
+      <button class="small" id="exportCopy" title="Markdown with titles, metrics and scripts, ready to paste into ChatGPT or another AI tool">Copy for ChatGPT</button>
+      <button class="secondary small" data-export="md">.md</button>
+      <button class="secondary small" data-export="json">.json</button>
+      <button class="secondary small" data-export="csv">.csv</button>
+      <button class="secondary small" id="clearSel">Clear selection</button>
+    </div>
+    <div class="row" id="exportAllRow" style="margin:8px 0;gap:6px">
+      <span class="hint">Export all ${rows.length} shown (or tick reels to export only those):</span>
+      <button class="small" id="exportAllCopy">Copy for ChatGPT</button>
+      <button class="secondary small" data-exportall="md">.md</button>
+      <button class="secondary small" data-exportall="json">.json</button>
+      <button class="secondary small" data-exportall="csv">.csv</button>
+    </div>
+    <div class="tablewrap" style="margin-top:8px"><table>
+      <thead><tr><th><input type="checkbox" data-selall title="Select all" /></th><th>Reel</th>${COLUMNS.map(([k, label]) => `<th class="${k === 'published' ? '' : 'num'}" data-sort="${k}" style="cursor:pointer;white-space:nowrap">${label}${arrow(k)}</th>`).join('')}<th>Transcript (English)</th><th></th></tr></thead>
+      <tbody>${rows.map(({ r, p, f, v }) => {
+        const t = r.transcript;
+        const en = t && t.english;
+        const hookEn = en ? (en.segments || []).filter((x) => x.start < 3).map((x) => x.text).join(' ') || (en.segments || [])[0]?.text || '' : '';
+        const tCell = !t ? '<span class="null">none</span>'
+          : t.status !== 'completed' ? `<span class="badge">${esc(t.status.replace('_', ' '))}</span>`
+          : `<details><summary>${en ? esc(en.text.slice(0, 70)) + '…' : '<span class="null">no English version yet (re-import to add)</span>'}</summary>
+              ${f ? `<p class="hint">Hook (${esc(f.hook.types.join(', '))})${hookEn ? `: “${esc(hookEn)}”` : ''} · ${f.structure.words} words · ${f.structure.wordsPerSecond ?? 'n/a'} words/s · spoken in ${esc(f.language === 'other' ? (t.language || 'other') : f.language)}${f.ending.hasCallToAction ? ` · ends with CTA: ${esc(f.ending.ctaTypes.join(', '))}` : ''}</p>` : ''}
+              ${en ? `<div class="transcript">${segs(en.segments)}</div>` : ''}
+              ${t.language !== 'en' ? `<details style="margin-top:6px"><summary>Original (${esc(t.language || '?')})</summary><div class="transcript">${segs(t.original.segments)}</div></details>` : ''}
+            </details>`;
+        return `<tr>
+          <td><input type="checkbox" data-sel="${esc(r.shortcode)}" /></td>
+          <td style="min-width:230px;max-width:320px"><a href="${esc(r.url)}" target="_blank" rel="noopener" title="${esc(r.caption || '')}" style="color:var(--text);font-weight:600;display:block;line-height:1.35">${esc(reelTitle(r))}</a>
+            <div class="row" style="gap:6px;margin-top:5px"><span class="hint" style="font-family:ui-monospace,Menlo,monospace;font-size:11px">${esc(r.shortcode)}</span>${p.isOutlier ? '<span class="badge s-completed">outlier</span>' : ''}${r.availability !== 'available' ? '<span class="badge s-failed">unavailable</span>' : ''}</div></td>
+          <td style="white-space:nowrap">${fmtDate(r.publishedAt)}</td>
+          <td class="num">${v.length ? Math.round(v.length) + 's' : '<span class="null">n/a</span>'}</td>
+          <td class="num">${metric(v.views, r.metrics.approximate && r.metrics.approximate.views)}</td>
+          <td class="num">${metric(v.likes, r.metrics.approximate && r.metrics.approximate.likes)}</td>
+          <td class="num">${metric(v.comments, r.metrics.approximate && r.metrics.approximate.comments)}</td>
+          <td class="num">${num(v.engagement)}</td>
+          <td class="num">${v.rate != null ? (v.rate * 100).toFixed(1) + '%' : '<span class="null">n/a</span>'}</td>
+          <td class="num">${v.xmedian != null ? v.xmedian.toFixed(1) + '×' : '<span class="null">n/a</span>'}</td>
+          <td style="min-width:280px">${tCell}</td>
+          <td style="white-space:nowrap">
+            ${!t ? `<button class="small" data-transcribe="${esc(r.shortcode)}">Transcribe</button>` : ''}
+            ${t ? `<button class="danger small" data-deltr="${esc(r.shortcode)}" title="Delete only the transcript; re-import to regenerate it">Delete transcript</button>` : ''}
+            <button class="danger small" data-delreel="${esc(r.shortcode)}" title="Delete this reel with its metrics, transcript and audio">Delete reel</button>
+          </td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>`;
+  $('reelsOut').querySelectorAll('[data-sort]').forEach((th) => (th.onclick = () => {
+    const k = th.dataset.sort;
+    sortDir = k === sortKey ? -sortDir : -1;
+    sortKey = k;
+    renderReels(lastData, lastReport);
+  }));
+  const out = $('reelsOut');
+  const delReels = async (codes) => {
+    const r = await api('/v1/reels/delete', { method: 'POST', body: JSON.stringify({ shortcodes: codes }) });
+    toast(`Deleted ${r.deleted} reel(s) with their transcripts and audio`);
+    await loadCreator();
+    loadImports();
+  };
+  const delTranscripts = async (codes) => {
+    const r = await api('/v1/reels/delete-transcripts', { method: 'POST', body: JSON.stringify({ shortcodes: codes }) });
+    toast(r.deleted ? `Deleted ${r.deleted} transcript(s). Import the reels again to regenerate them.` : 'No transcripts to delete for the selected reels');
+    await loadCreator();
+  };
+  const transcribe = async (codes) => {
+    const res = await api('/v1/imports', { method: 'POST', body: JSON.stringify({ reelUrls: codes.map((c) => `https://www.instagram.com/reel/${c}/`), transcribe: true }) });
+    toast(`Transcribing ${codes.length} reel(s) — progress is shown at the top`);
+    watch(res.importId);
+    loadImports();
+    showTab('import');
+  };
+  out.querySelectorAll('[data-transcribe]').forEach((b) => (b.onclick = () => transcribe([b.dataset.transcribe]).catch((e) => toast(e.message, true))));
+  $('transcribeSel').onclick = () => transcribe(selected).catch((e) => toast(e.message, true));
+  out.querySelectorAll('[data-delreel]').forEach((b) => armDelete(b, () => delReels([b.dataset.delreel]), () => 'delete reel + metrics + transcript + audio'));
+  out.querySelectorAll('[data-deltr]').forEach((b) => armDelete(b, () => delTranscripts([b.dataset.deltr]), () => 'delete transcript only'));
+  let selected = [];
+  wireSelection(out, (sel) => {
+    selected = sel;
+    $('reelBar').hidden = !sel.length;
+    $('exportAllRow').hidden = sel.length > 0;
+    $('reelSelCount').textContent = `${sel.length} selected`;
+  });
+  const shownCodes = rows.map((x) => x.r.shortcode);
+  const doExport = async (codes, format, copy) => {
+    if (!codes.length) { toast('Nothing to export', true); return; }
+    const { text, mime, ext } = buildExport(codes, format);
+    if (copy) {
+      try { await navigator.clipboard.writeText(text); toast(`Copied ${codes.length} reel(s) — paste into ChatGPT`); }
+      catch { downloadText(text, mime, `${exportName()}.${ext}`); toast('Clipboard blocked; downloaded the file instead'); }
+      return;
+    }
+    downloadText(text, mime, `${exportName()}.${ext}`);
+    toast(`Exported ${codes.length} reel(s) as .${ext}`);
+  };
+  $('exportCopy').onclick = () => doExport(selected, 'md', true);
+  out.querySelectorAll('[data-export]').forEach((b) => (b.onclick = () => doExport(selected, b.dataset.export, false)));
+  $('exportAllCopy').onclick = () => doExport(shownCodes, 'md', true);
+  out.querySelectorAll('[data-exportall]').forEach((b) => (b.onclick = () => doExport(shownCodes, b.dataset.exportall, false)));
+  armDelete($('delReelsSel'), () => delReels(selected), () => `delete ${selected.length} reel(s) + metrics + transcripts + audio`);
+  armDelete($('delTranscriptsSel'), () => delTranscripts(selected), () => `delete ${selected.length} transcript(s), keep reels`);
+  $('clearSel').onclick = () => { out.querySelectorAll('[data-sel], [data-selall]').forEach((c) => { c.checked = false; c.indeterminate = false; }); $('reelBar').hidden = true; selected = []; };
+}
+
+// ---- Export (for ChatGPT / other AI tools, spreadsheets)
+const localDate = () => new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in the viewer's timezone
+const exportName = () => `reels-${($('username').value || 'export').replace(/[^a-z0-9._-]/gi, '')}-${localDate()}`;
+function downloadText(text, mime, filename) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type: mime }));
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+/** A readable title: first caption line without hashtags/mentions, else the first spoken English sentence. */
+function reelTitle(r) {
+  const fromCaption = (r.caption || '').split('\n').map((l) => l.replace(/[#@][\p{L}\p{N}_.]+/gu, '').trim()).find((l) => l.length > 2);
+  const en = r.transcript && r.transcript.english && r.transcript.english.text;
+  const fromSpeech = en ? en.split(/(?<=[.!?])\s/)[0] : '';
+  const t = (fromCaption || fromSpeech || r.shortcode).trim();
+  return t.length > 110 ? t.slice(0, 107) + '…' : t;
+}
+function exportRecords(codes) {
+  const perf = Object.fromEntries(lastReport.measured.reels.map((p) => [p.shortcode, p]));
+  const feats = Object.fromEntries(lastReport.content.map((c) => [c.shortcode, c.features]));
+  const byCode = Object.fromEntries(lastData.reels.map((r) => [r.shortcode, r]));
+  return codes.map((code) => {
+    const r = byCode[code], p = perf[code] || {}, f = feats[code], t = r.transcript;
+    const done = t && t.status === 'completed';
+    return {
+      title: reelTitle(r),
+      url: r.url,
+      shortcode: r.shortcode,
+      published: r.publishedAt ? r.publishedAt.slice(0, 10) : null,
+      durationSeconds: r.durationSeconds ? Math.round(r.durationSeconds) : null,
+      views: r.metrics.views, viewsApproximate: Boolean(r.metrics.approximate && r.metrics.approximate.views),
+      likes: r.metrics.likes, comments: r.metrics.comments,
+      engagementRate: p.engagementRate != null ? +(p.engagementRate * 100).toFixed(2) : null,
+      timesCreatorMedian: p.ratioToMedian != null ? +p.ratioToMedian.toFixed(2) : null,
+      outlier: Boolean(p.isOutlier),
+      language: f ? f.language : (t && t.language) || null,
+      hookTypes: f ? f.hook.types : [],
+      caption: r.caption || '',
+      transcriptStatus: t ? t.status : 'not_transcribed',
+      transcriptOriginal: done ? t.original.text : null,
+      transcriptOriginalSegments: done ? t.original.segments : null,
+      transcriptEnglish: done && t.english ? t.english.text : null,
+    };
+  });
+}
+function buildExport(codes, format) {
+  const recs = exportRecords(codes);
+  if (format === 'json') {
+    const m = lastReport.measured;
+    return { ext: 'json', mime: 'application/json', text: JSON.stringify({ creator: lastData.username, exportedAt: new Date().toISOString(), creatorMedians: m.medians, note: 'views are rounded counts from Instagram\'s profile grid when viewsApproximate is true; likes/comments are exact', reels: recs }, null, 2) };
+  }
+  if (format === 'csv') {
+    const cols = ['title', 'url', 'published', 'durationSeconds', 'views', 'viewsApproximate', 'likes', 'comments', 'engagementRate', 'timesCreatorMedian', 'outlier', 'language', 'transcriptStatus', 'transcriptOriginal', 'transcriptEnglish', 'caption'];
+    const cell = (v) => { const x = v == null ? '' : String(v); return /[",\n]/.test(x) ? `"${x.replace(/"/g, '""')}"` : x; };
+    return { ext: 'csv', mime: 'text/csv', text: '﻿' + [cols.join(','), ...recs.map((r) => cols.map((c) => cell(r[c])).join(','))].join('\n') };
+  }
+  // Markdown, written to be pasted into ChatGPT / Claude / Gemini.
+  const fmt = (n, approx) => (n == null ? 'n/a' : approx ? '≈' + compact.format(n) : n.toLocaleString('en'));
+  const m = lastReport.measured.medians;
+  const ts2 = (sec) => `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, '0')}`;
+  const lines = [
+    `# Instagram Reels — @${lastData.username}`,
+    '',
+    `Exported ${localDate()} · ${recs.length} reel(s) · sorted as shown in ReelScript.`,
+    `Creator medians across all collected reels: views ${fmt(m.views, true)}, likes ${fmt(m.likes)}, comments ${fmt(m.comments)}.`,
+    'Notes: "≈" views are rounded counts from Instagram\'s profile grid; likes and comments are exact. "× median" compares a reel with this creator\'s typical reel. Original scripts are verbatim (Hindi/Hinglish as spoken); English is a machine translation.',
+    '',
+  ];
+  recs.forEach((r, i) => {
+    lines.push(`## ${i + 1}. ${r.title}`, '');
+    lines.push(`- Link: ${r.url}`);
+    lines.push(`- Published: ${r.published || 'n/a'} · Length: ${r.durationSeconds != null ? r.durationSeconds + 's' : 'n/a'}`);
+    lines.push(`- Views: ${fmt(r.views, r.viewsApproximate)} · Likes: ${fmt(r.likes)} · Comments: ${fmt(r.comments)}` +
+      `${r.engagementRate != null ? ` · Engagement rate: ${r.engagementRate}%` : ''}${r.timesCreatorMedian != null ? ` · ${r.timesCreatorMedian}× creator median` : ''}${r.outlier ? ' · OUTLIER' : ''}`);
+    if (r.language || r.hookTypes.length) lines.push(`- Language: ${r.language || 'n/a'}${r.hookTypes.length ? ` · Hook type: ${r.hookTypes.join(', ')}` : ''}`);
+    if (r.caption) lines.push('', '**Caption:**', '', r.caption.trim().split('\n').map((l) => '> ' + l).join('\n'));
+    if (r.transcriptStatus !== 'completed') {
+      lines.push('', `_Script: ${r.transcriptStatus === 'no_speech' ? 'no speech (music only)' : 'not transcribed'}_`);
+    } else {
+      lines.push('', '**Script (original, as spoken):**', '', (r.transcriptOriginalSegments || []).map((x) => `[${ts2(x.start)}] ${x.text}`).join('\n'));
+      if (r.transcriptEnglish && r.language !== 'english') lines.push('', '**Script (English translation):**', '', r.transcriptEnglish);
+    }
+    lines.push('', '---', '');
+  });
+  return { ext: 'md', mime: 'text/markdown', text: lines.join('\n') };
+}
+
+// ---- Filters & sort controls
+const rerender = () => lastData && renderReels(lastData, lastReport);
+['fSearch', 'fViews', 'fLikes', 'fComments'].forEach((id) => ($(id).oninput = rerender));
+['fLang', 'fTranscript', 'fFrom', 'fTo', 'fOutliers', 'fHasTranscript'].forEach((id) => ($(id).onchange = rerender));
+$('fViewsPreset').onchange = () => {
+  const v = $('fViewsPreset').value;
+  $('fViews').hidden = v !== 'custom';
+  if (v !== 'custom') $('fViews').value = v;
+  rerender();
+};
+$('fSort').onchange = () => { sortKey = $('fSort').value; sortDir = -1; rerender(); };
+$('fDir').onclick = () => { sortDir = -sortDir; rerender(); };
+$('fReset').onclick = () => {
+  ['fSearch', 'fViews', 'fLikes', 'fComments', 'fFrom', 'fTo'].forEach((id) => ($(id).value = ''));
+  $('fViewsPreset').value = ''; $('fViews').hidden = true;
+  $('fLang').value = ''; $('fTranscript').value = ''; $('fOutliers').checked = false; $('fHasTranscript').checked = false;
+  sortKey = 'views'; sortDir = -1; rerender();
+};
+
+// ---- Settings: sequential vs parallel transcription
+function renderModeOptions(st) {
+  const hosted = st.transcriptionProvider !== 'whisper_cpp';
+  const choices = hosted ? [1, 2, 4, 8, 16, 32].filter((n) => n <= st.maxTranscriptionConcurrency) : Array.from({ length: st.maxTranscriptionConcurrency }, (_, i) => i + 1);
+  const label = (n) => {
+    if (n === 1) return '1 at a time (sequential)';
+    if (n === st.recommendedConcurrency) return `${n} at a time (fastest${hosted ? '' : ' on this Mac'})`;
+    if (!hosted && n > st.recommendedConcurrency) return `${n} at a time (slower: they share one GPU)`;
+    return `${n} at a time`;
+  };
+  $('mode').innerHTML = choices.map((n) => `<option value="${n}">${label(n)}</option>`).join('');
+  $('mode').value = String(st.transcriptionConcurrency);
+}
+api('/v1/settings').then(renderModeOptions).catch(() => undefined);
+$('mode').onchange = async () => {
+  try {
+    const st = await api('/v1/settings', { method: 'PUT', body: JSON.stringify({ transcriptionConcurrency: Number($('mode').value) }) });
+    renderModeOptions(st);
+    toast(`Now transcribing ${st.transcriptionConcurrency} reel(s) at a time`);
+  } catch (e) { toast(e.message, true); }
+};
+
+// ---- Bookmarklet: runs on instagram.com in the user's own browser and only reads links on the page.
+function collector(ORIGIN) {
+  if (!/(^|\.)instagram\.com$/.test(location.hostname)) { alert('Open a creator\'s Reels tab on instagram.com, then click this bookmark.'); return; }
+  if (window.__rsCollector) { try { window.__rsCollector.stop(); } catch (e) {} }
+  const user = location.pathname.split('/').filter(Boolean)[0] || '';
+  const codes = new Set();
+  // Build the box with DOM APIs only (no innerHTML), so strict page policies can't block it.
+  const el = (tag, css, text) => { const n = document.createElement(tag); if (css) n.style.cssText = css; if (text) n.textContent = text; return n; };
+  const btnCss = 'background:#a78bfa;color:#0f0f12;border:0;border-radius:6px;padding:6px 10px;font:600 13px system-ui;cursor:pointer';
+  const box = el('div', 'position:fixed;right:16px;bottom:16px;z-index:2147483647;background:#18181d;color:#ececf1;font:14px system-ui;padding:12px 14px;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.45);width:280px');
+  const title = el('div', 'font-weight:600;margin-bottom:6px', 'ReelScript collector');
+  const count = el('div', '', '0 reels found');
+  const row = el('div', 'margin-top:8px;display:flex;gap:6px');
+  const autoBtn = el('button', btnCss, 'Auto-scroll');
+  const goBtn = el('button', btnCss, 'Import');
+  const closeBtn = el('button', btnCss, '✕');
+  const hint = el('div', 'opacity:.75;font-size:12px;margin-top:6px;word-break:break-word');
+  row.append(autoBtn, goBtn, closeBtn);
+  box.append(title, count, row, hint);
+  document.body.appendChild(box);
+
+  const metrics = {};
+  // Grid counts are display strings: "1.4m", "43.3k", "1,838".
+  const parseCount = (t) => {
+    const m = String(t || '').trim().toLowerCase().replace(/,/g, '').match(/^(\d+(?:\.\d+)?)\s*([kmb])?$/);
+    if (!m) return null;
+    return Math.round(Number(m[1]) * ({ k: 1e3, m: 1e6, b: 1e9 }[m[2]] || 1));
+  };
+  // Each tile shows [likes, comments] (hover overlay) and views (next to the "View count" icon).
+  const readTile = (a) => {
+    const texts = [];
+    a.querySelectorAll('span').forEach((sp) => {
+      if (sp.children.length) return;
+      const v = sp.textContent.trim();
+      if (v && texts[texts.length - 1] !== v) texts.push(v);
+    });
+    const nums = texts.map(parseCount).filter((n) => n !== null);
+    const viewIcon = a.querySelector('svg[aria-label*="View" i], svg[aria-label*="Play" i]');
+    let views = null;
+    if (viewIcon) {
+      const holder = viewIcon.closest('div') && viewIcon.closest('div').parentElement;
+      views = holder ? parseCount(holder.textContent) : null;
+      if (views === null && nums.length) views = nums[nums.length - 1];
+    }
+    const rest = views !== null ? nums.slice(0, -1) : nums;
+    return { views, likes: rest.length >= 2 ? rest[0] : null, comments: rest.length >= 2 ? rest[1] : null };
+  };
+  const scan = () => {
+    document.querySelectorAll('a[href*="/reel/"], a[href*="/p/"]').forEach((a) => {
+      const m = (a.getAttribute('href') || '').match(/\/(?:reel|p)\/([A-Za-z0-9_-]{5,})/);
+      if (!m) return;
+      codes.add(m[1]);
+      const t = readTile(a);
+      if (t.views !== null || t.likes !== null) metrics[m[1]] = [t.views, t.likes, t.comments];
+    });
+    // Only touch the DOM when the number changes; writing on every call would re-trigger the observer forever.
+    const label = codes.size + ' reels found' + (user ? ' on @' + user : '');
+    if (count.textContent !== label) count.textContent = label;
+  };
+  scan();
+  // Ignore changes inside our own box, and batch the rest (Instagram mutates the page constantly).
+  let pending = null;
+  const obs = new MutationObserver((muts) => {
+    if (pending || muts.every((m) => box.contains(m.target))) return;
+    pending = setTimeout(() => { pending = null; scan(); }, 300);
+  });
+  obs.observe(document.body, { childList: true, subtree: true });
+
+  // Instagram scrolls an inner panel, not the window. Scroll whichever elements actually scroll,
+  // and bring the last reel into view, which is what triggers loading the next batch.
+  const scrollers = () => {
+    const list = [document.scrollingElement];
+    document.querySelectorAll('div, main, section').forEach((n) => {
+      if (n.scrollHeight > n.clientHeight + 50) {
+        const oy = getComputedStyle(n).overflowY;
+        if (oy === 'auto' || oy === 'scroll') list.push(n);
+      }
+    });
+    return list;
+  };
+  const step = () => {
+    scrollers().forEach((n) => { n.scrollTop = n.scrollTop + Math.max(n.clientHeight * 0.9, 400); });
+    window.scrollBy(0, window.innerHeight * 0.9);
+    const links = document.querySelectorAll('a[href*="/reel/"], a[href*="/p/"]');
+    if (links.length) links[links.length - 1].scrollIntoView({ block: 'end' });
+  };
+
+  let timer = null, idle = 0, last = 0;
+  const stopAuto = (msg) => { clearInterval(timer); timer = null; autoBtn.textContent = 'Auto-scroll'; if (msg) hint.textContent = msg; };
+  autoBtn.onclick = () => {
+    if (timer) { stopAuto('Stopped. ' + codes.size + ' reels collected.'); return; }
+    autoBtn.textContent = 'Stop';
+    idle = 0; last = codes.size;
+    hint.textContent = 'Scrolling…';
+    step();
+    timer = setInterval(() => {
+      step();
+      scan();
+      if (codes.size === last) idle++; else { idle = 0; last = codes.size; }
+      hint.textContent = idle ? 'No new reels for ' + idle + ' scrolls…' : 'Scrolling… ' + codes.size + ' so far';
+      if (idle >= 10) stopAuto('Reached the end (or Instagram stopped loading more). Press Import.');
+    }, 1500);
+  };
+
+  goBtn.onclick = () => {
+    scan();
+    if (!codes.size) { hint.textContent = 'No reel links found yet. Open the Reels tab and scroll.'; return; }
+    const list = [...codes];
+    const url = ORIGIN + '/#collect=' + encodeURIComponent(JSON.stringify({ u: user, c: list, m: metrics }));
+    // Copy plain links too, so they can be pasted if the new tab is blocked.
+    const text = list.map((c) => 'https://www.instagram.com/reel/' + c + '/').join('\n');
+    try { navigator.clipboard && navigator.clipboard.writeText(text).catch(() => {}); } catch (e) {}
+    const link = el('a', 'color:#a78bfa;font-weight:600;display:block;margin-top:6px', 'Open ReelScript with ' + list.length + ' reels ↗');
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    hint.textContent = list.length + ' links copied to clipboard. ';
+    hint.appendChild(link);
+    link.click();
+  };
+
+  const stop = () => { clearInterval(timer); clearTimeout(pending); obs.disconnect(); box.remove(); window.__rsCollector = null; };
+  closeBtn.onclick = stop;
+  window.__rsCollector = { stop };
+}
+$('bookmarklet').href = 'javascript:(' + encodeURIComponent(collector.toString()) + ')(' + encodeURIComponent(JSON.stringify(location.origin)) + ')';
+$('bookmarklet').onclick = (e) => { e.preventDefault(); alert('Drag this button to your bookmarks bar, then click it while viewing a creator\'s Reels tab on instagram.com.'); };
+
+// Restore state from the URL hash (refresh, bookmark hand-off, shared links).
+function handleHash() {
+  const hash = new URLSearchParams(location.hash.slice(1));
+  if (hash.get('collect')) {
+    try {
+      const { u, c, m } = JSON.parse(hash.get('collect'));
+      collectedMetrics = m || {};
+      collectedUser = u || null;
+      $('reels').value = c.map((code) => `https://www.instagram.com/reel/${code}/`).join('\n');
+      $('collected').hidden = false;
+      const withViews = Object.values(collectedMetrics).filter((x) => x[0] != null).length;
+      $('collected').textContent = `Collected ${c.length} reel link(s)${u ? ` from @${u}` : ''}${withViews ? `, with view counts for ${withViews}` : ''}. Review the list, then press Start import.`;
+      history.replaceState(null, '', location.pathname);
+      showTab('import');
+    } catch { /* ignore malformed hash */ }
+    return;
+  }
+  if (hash.get('import')) { watch(hash.get('import')); showTab('import'); }
+  if (hash.get('user')) openCreator(hash.get('user'));
+}
+window.addEventListener('hashchange', handleHash);
+loadImports();
+wireMinViews('minViewsPreset', 'minViews', 'minViewsText');
+wireMinViews('thPreset', 'thCustom', 'thText');
+handleHash();
+loadCreators();
+</script>
+</body>
+</html>
